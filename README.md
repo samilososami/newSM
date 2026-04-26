@@ -1,8 +1,8 @@
 # NEW STEAMMAKERS ESP32 Flasher & IDE
 
-Browser-based development environment and flashing tool for ESP32 devices running MicroPython. It utilizes the Web Serial API for direct communication with the board and features a block-based visual programming interface powered by Blockly.
+Entorno de desarrollo y herramienta de flasheo desde el navegador para placas ESP32 con MicroPython. Utiliza la Web Serial API para comunicarse directamente con la placa y cuenta con una interfaz de programación visual por bloques impulsada por Blockly.
 
-## Technologies Used
+## Tecnologías Utilizadas
 
 <div align="center">
   <img src="https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E" alt="JavaScript" />
@@ -11,28 +11,28 @@ Browser-based development environment and flashing tool for ESP32 devices runnin
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="MicroPython" />
 </div>
 
-## Features
+## Características
 
-- **Block-Based Programming:** Visual coding with Blockly, tailored for hardware control.
-- **Code Mode:** View and edit generated MicroPython code, or write manual code.
-- **Web Serial Communication:** Direct connection to the ESP32 via USB using the browser's Web Serial API.
-- **Integrated Console:** Built-in REPL for debugging and direct command execution.
-- **AI Assistant Integration:** Optional integration with Ollama for intelligent coding assistance.
-- **Theme Support:** Polished light and dark modes.
+- **Programación por Bloques:** Codificación visual con Blockly, adaptada para el control de hardware.
+- **Modo Código:** Visualiza y edita el código MicroPython generado, o escribe código de forma manual.
+- **Comunicación Web Serial:** Conexión directa al ESP32 por USB usando la Web Serial API del navegador.
+- **Consola Integrada:** REPL incorporado para depuración y ejecución directa de comandos.
+- **Asistente IA Integrado:** Integración opcional con Ollama para asistencia de código inteligente.
+- **Soporte de Temas:** Modos claro y oscuro pulidos y modernos.
 
-## Setup & Execution
+## Configuración y Ejecución
 
-1. Clone this repository.
-2. Install dependencies:
+1. Clona este repositorio.
+2. Instala las dependencias:
    ```bash
    npm install
    ```
-3. Run the development server:
+3. Ejecuta el servidor de desarrollo:
    ```bash
    npm run dev
    ```
 
-## Deployment
+## Despliegue
 
-This project is configured to be easily deployed to Vercel. 
-The Vercel configuration uses the `vercel.json` file for routing rules and SPA handling.
+Este proyecto está configurado para desplegarse fácilmente en Vercel. 
+La configuración de Vercel utiliza el archivo `vercel.json` para las reglas de enrutamiento y el manejo de la SPA (Single Page Application).
