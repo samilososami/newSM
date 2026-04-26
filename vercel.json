@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/proxy/ollama/chat/completions",
+      "destination": "/api/ollama"
+    }
+  ]
+}
