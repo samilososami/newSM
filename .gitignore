@@ -27,3 +27,4 @@ dist-ssr
 .playwright-mcp/
 docs/superpowers/
 new-steammakers-verify.png
+.vercel
