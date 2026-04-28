@@ -27,6 +27,14 @@ const DEFAULT_SETTINGS = {
   ollamaEndpoint: "https://ollama.com/v1",
 };
 
+const SAMI_AUTH_BASE = "https://auth.samilososami.com";
+const SAMI_CLIENT_ID = import.meta.env.VITE_SAMI_CLIENT_ID || "newsm";
+const SAMI_SESSION_KEY = "new-steammakers:sami-session:v1";
+const SAMI_VISITOR_KEY = "new-steammakers:sami-visitor:v1";
+const SAMI_STATE_KEY = "new-steammakers:sami-oauth-state:v1";
+const SAMI_FULL_MARK = "https://id.samilososami.com/brand/sami-id-full.png";
+const SAMI_ICON_MARK = "https://id.samilososami.com/brand/sami-id-icon.png";
+
 let workspace;
 let saveTimer;
 let activeTab = "blocks";
@@ -44,6 +52,9 @@ let aiHistory = [];
 let aiTyping = false;
 let aiApplyingBlocks = false;
 let svgResizeTimer;
+let samiSession = loadSamiSession();
+let visitorMode = localStorage.getItem(SAMI_VISITOR_KEY) === "1";
+let authGateError = "";
 
 function scheduleSvgResize() {
   clearTimeout(svgResizeTimer);
@@ -97,6 +108,10 @@ app.innerHTML = `
         <div class="topbar-sep"></div>
         <button class="topbar-icon-btn" id="reconnectButton" type="button" title="Reconectar al último puerto" hidden><i data-lucide="refresh-cw"></i></button>
         <button class="soft-button" id="connectButton" type="button" title="Conectar placa por WebSerial"><i data-lucide="plug-zap"></i><span>Conectar</span></button>
+        <button class="sami-account-button" id="samiAccountButton" type="button" title="Cuenta Sami ID">
+          <img src="${SAMI_ICON_MARK}" alt="" />
+          <span>Visitante</span>
+        </button>
         <button class="topbar-icon-btn ai-toggle-btn" id="aiPanelToggle" type="button" title="Asistente IA — SteamBot"><i data-lucide="bot"></i></button>
       </div>
     </header>
@@ -219,6 +234,21 @@ app.innerHTML = `
         </div>
       </div>
 
+      <div class="settings-card sami-account-card">
+        <div class="card-heading"><i data-lucide="user-round"></i><h2>Cuenta Sami ID</h2></div>
+        <div class="sami-account-row">
+          <img id="samiSettingsAvatar" src="${SAMI_ICON_MARK}" alt="" />
+          <div>
+            <strong id="samiSettingsName">Visitante</strong>
+            <p id="samiSettingsDetail">Trabajando sin cuenta.</p>
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="soft-button" id="samiSettingsLoginButton" type="button"><img src="${SAMI_ICON_MARK}" alt="" /><span>Iniciar sesión</span></button>
+          <button class="soft-button danger-soft-button" id="samiSettingsLogoutButton" type="button" hidden><i data-lucide="log-out"></i><span>Cerrar sesión</span></button>
+        </div>
+      </div>
+
       <div class="settings-card">
         <div class="card-heading"><i data-lucide="layers"></i><h2>Calidad de bloques</h2></div>
         <div class="choice-grid vertical" role="radiogroup" aria-label="Calidad visual">
@@ -296,6 +326,21 @@ app.innerHTML = `
       </div>
     </section>
   </div>
+
+  <div class="sami-auth-overlay" id="samiAuthOverlay" hidden>
+    <section class="sami-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="samiAuthTitle">
+      <img class="sami-auth-full" src="${SAMI_FULL_MARK}" alt="Sami ID" />
+      <h2 id="samiAuthTitle">Inicia sesión con Sami ID</h2>
+      <p>Entra para identificarte en NEW STEAMMAKERS o continúa como visitante.</p>
+      <p class="sami-auth-error" id="samiAuthError" hidden></p>
+      <div class="sami-auth-actions">
+        <button class="sami-login-button" id="samiLoginButton" type="button">
+          <img src="${SAMI_FULL_MARK}" alt="Iniciar sesión con Sami ID" />
+        </button>
+        <button class="soft-button" id="samiVisitorButton" type="button"><i data-lucide="user-round"></i><span>Entrar como visitante</span></button>
+      </div>
+    </section>
+  </div>
 `;
 
 createIcons({ icons });
@@ -364,6 +409,16 @@ const els = {
   aiClearButton: document.querySelector("#aiClearButton"),
   aiResizeHandle: document.querySelector("#aiResizeHandle"),
   aiWelcome: document.querySelector("#aiWelcome"),
+  samiAccountButton: document.querySelector("#samiAccountButton"),
+  samiSettingsAvatar: document.querySelector("#samiSettingsAvatar"),
+  samiSettingsName: document.querySelector("#samiSettingsName"),
+  samiSettingsDetail: document.querySelector("#samiSettingsDetail"),
+  samiSettingsLoginButton: document.querySelector("#samiSettingsLoginButton"),
+  samiSettingsLogoutButton: document.querySelector("#samiSettingsLogoutButton"),
+  samiAuthOverlay: document.querySelector("#samiAuthOverlay"),
+  samiAuthError: document.querySelector("#samiAuthError"),
+  samiLoginButton: document.querySelector("#samiLoginButton"),
+  samiVisitorButton: document.querySelector("#samiVisitorButton"),
 };
 
 // ─── Sound ─────────────────────────────────────────────────────────────────
@@ -408,6 +463,140 @@ const sound = {
     second.stop(now + duration);
   },
 };
+
+// ─── Sami ID session ────────────────────────────────────────────────────────
+function loadSamiSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SAMI_SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveSamiSession(session) {
+  samiSession = session;
+  if (session) {
+    localStorage.setItem(SAMI_SESSION_KEY, JSON.stringify(session));
+    localStorage.removeItem(SAMI_VISITOR_KEY);
+    visitorMode = false;
+  } else {
+    localStorage.removeItem(SAMI_SESSION_KEY);
+  }
+  renderSamiAccount();
+}
+
+function samiRedirectUri() {
+  return `${window.location.origin}/auth/callback`;
+}
+
+function randomOAuthState() {
+  const bytes = new Uint8Array(24);
+  if (globalThis.crypto?.getRandomValues) {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function startSamiLogin() {
+  const state = randomOAuthState();
+  sessionStorage.setItem(SAMI_STATE_KEY, state);
+  localStorage.removeItem(SAMI_VISITOR_KEY);
+  const params = new URLSearchParams({
+    client_id: SAMI_CLIENT_ID,
+    redirect_uri: samiRedirectUri(),
+    response_type: "code",
+    scope: "profile email",
+    state,
+  });
+  window.location.href = `${SAMI_AUTH_BASE}/authorize?${params.toString()}`;
+}
+
+function setVisitorMode() {
+  visitorMode = true;
+  authGateError = "";
+  localStorage.setItem(SAMI_VISITOR_KEY, "1");
+  els.samiAuthOverlay.hidden = true;
+  renderSamiAccount();
+}
+
+function setSamiGate(open, error = "") {
+  authGateError = error;
+  els.samiAuthOverlay.hidden = !open;
+  if (els.samiAuthError) {
+    els.samiAuthError.textContent = error;
+    els.samiAuthError.hidden = !error;
+  }
+}
+
+function displaySamiUser() {
+  const user = samiSession?.user;
+  if (!user) return "Visitante";
+  return user.name || user.username || user.email?.split("@")[0] || "Sami ID";
+}
+
+function renderSamiAccount() {
+  const signedIn = Boolean(samiSession?.user);
+  const name = displaySamiUser();
+  const detail = signedIn ? samiSession.user.email : "Trabajando sin cuenta.";
+
+  if (els.samiAccountButton) {
+    els.samiAccountButton.classList.toggle("is-signed-in", signedIn);
+    els.samiAccountButton.innerHTML = `<img src="${signedIn ? SAMI_ICON_MARK : SAMI_ICON_MARK}" alt="" /><span>${escHtml(name)}</span>`;
+  }
+  if (els.samiSettingsAvatar) els.samiSettingsAvatar.src = SAMI_ICON_MARK;
+  if (els.samiSettingsName) els.samiSettingsName.textContent = name;
+  if (els.samiSettingsDetail) els.samiSettingsDetail.textContent = detail;
+  if (els.samiSettingsLoginButton) els.samiSettingsLoginButton.hidden = signedIn;
+  if (els.samiSettingsLogoutButton) els.samiSettingsLogoutButton.hidden = !signedIn;
+  createIcons({ icons });
+}
+
+async function handleSamiCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const state = params.get("state");
+  const error = params.get("error");
+
+  if (error) {
+    history.replaceState({}, "", "/");
+    setSamiGate(true, "La autorización se ha cancelado.");
+    return;
+  }
+
+  if (!code || window.location.pathname !== "/auth/callback") return;
+
+  const expectedState = sessionStorage.getItem(SAMI_STATE_KEY);
+  sessionStorage.removeItem(SAMI_STATE_KEY);
+  history.replaceState({}, "", "/");
+
+  if (!state || state !== expectedState) {
+    setSamiGate(true, "La sesión OAuth no coincide. Vuelve a intentarlo.");
+    return;
+  }
+
+  setSamiGate(true, "Conectando con Sami ID...");
+
+  try {
+    const res = await fetch("/api/sami-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, redirect_uri: samiRedirectUri() }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "No se ha podido iniciar sesión.");
+    saveSamiSession(data);
+    setSamiGate(false);
+  } catch (err) {
+    setSamiGate(true, err.message || "No se ha podido iniciar sesión.");
+  }
+}
+
+function logoutSami() {
+  saveSamiSession(null);
+  setVisitorMode();
+}
 
 // ─── Console ───────────────────────────────────────────────────────────────
 function appendConsole(text, kind = "device") {
@@ -1908,6 +2097,12 @@ setCodeMode(codeMode);
 setTab(activeTab);
 setDrawerTab("settings");
 initAiResize();
+renderSamiAccount();
+handleSamiCallback().finally(() => {
+  if (!samiSession && !visitorMode && !authGateError && window.location.pathname !== "/auth/callback") {
+    setSamiGate(true);
+  }
+});
 
 // ─── Event listeners ───────────────────────────────────────────────────────
 document.querySelectorAll(".tab-button").forEach((b) => {
@@ -1967,6 +2162,16 @@ els.drawerBackdrop.addEventListener("click", () => setDrawer(false));
 els.mpCancelButton.addEventListener("click", hideMicroPythonMissingPopup);
 els.mpInstallButton.addEventListener("click", () => {
   location.href = mpFlasherUrl();
+});
+
+els.samiLoginButton.addEventListener("click", startSamiLogin);
+els.samiVisitorButton.addEventListener("click", setVisitorMode);
+els.samiSettingsLoginButton.addEventListener("click", startSamiLogin);
+els.samiSettingsLogoutButton.addEventListener("click", logoutSami);
+els.samiAccountButton.addEventListener("click", () => {
+  sound.play("tap");
+  setDrawerTab("settings");
+  setDrawer(true);
 });
 
 // Code editor

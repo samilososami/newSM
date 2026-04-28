@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/auth/callback",
+      "destination": "/"
+    },
+    {
       "source": "/proxy/ollama/chat/completions",
       "destination": "/api/ollama"
     }
