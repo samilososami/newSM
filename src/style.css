@@ -83,6 +83,7 @@ body {
 button, input, textarea { font: inherit; }
 button { border: 0; cursor: pointer; }
 input[type="radio"], input[type="checkbox"] { accent-color: var(--orange); }
+[hidden] { display: none !important; }
 
 /* ─────────────────────────────────────────────
    APP SHELL
@@ -2858,4 +2859,254 @@ html[data-visual-mode="detailed"] .blocklySelected > .blocklyPath {
 .sami-login-button img {
   max-height: 28px;
   width: auto;
+}
+
+/* Sami ID polish */
+.sami-account-button {
+  height: 38px;
+  gap: 9px;
+  padding: 0 13px 0 6px;
+  border: 1px solid rgba(203, 213, 225, 0.18);
+  background: rgba(255, 255, 255, 0.075);
+  color: #e5edf8;
+  font-weight: 760;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(2, 6, 23, 0.16);
+}
+
+.sami-account-button:hover {
+  border-color: rgba(147, 197, 253, 0.42);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.sami-account-button.is-signed-in {
+  border-color: rgba(52, 211, 153, 0.38);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(59, 130, 246, 0.10));
+}
+
+.sami-account-logo {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 7px 18px rgba(2, 6, 23, 0.22);
+  flex: 0 0 auto;
+}
+
+.sami-account-logo img,
+.sami-account-button img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  border-radius: 7px;
+}
+
+.sami-account-card {
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 34%),
+    rgba(255, 255, 255, 0.055);
+  border-color: rgba(147, 197, 253, 0.18);
+}
+
+.sami-account-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.sami-account-brand img {
+  width: 118px;
+  max-width: 62%;
+  height: auto;
+  object-fit: contain;
+}
+
+.sami-account-brand span {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.sami-account-row {
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sami-account-row img,
+.sami-account-card .soft-button img {
+  background: #ffffff;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.sami-account-card .drawer-actions .soft-button {
+  min-height: 42px;
+  justify-content: center;
+}
+
+.sami-auth-overlay {
+  background:
+    radial-gradient(circle at 50% 24%, rgba(59, 130, 246, 0.18), transparent 30%),
+    rgba(15, 23, 42, 0.76);
+  animation: samiOverlayIn 180ms ease-out both;
+}
+
+.sami-auth-dialog {
+  width: min(440px, 100%);
+  border-radius: 24px;
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.10), transparent 36%),
+    #f8fafc;
+  box-shadow: 0 30px 100px rgba(2, 6, 23, 0.38);
+  animation: samiDialogIn 240ms ease-out both;
+}
+
+.sami-auth-brandline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.sami-auth-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.10);
+}
+
+.sami-auth-icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.sami-auth-full {
+  width: 136px;
+  max-width: 58%;
+  height: auto;
+  margin: 0;
+  object-fit: contain;
+}
+
+.sami-auth-dialog h2 {
+  font-size: clamp(24px, 5vw, 31px);
+  line-height: 1.08;
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+.sami-auth-dialog p {
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #526173;
+}
+
+.sami-auth-status {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 16px auto 0;
+  padding: 9px 11px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #175dbd;
+  border: 1px solid #cfe0fb;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.sami-auth-status[hidden] {
+  display: none;
+}
+
+.sami-auth-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  border: 2px solid rgba(24, 119, 242, 0.18);
+  border-top-color: #1877f2;
+  animation: samiSpin .8s linear infinite;
+}
+
+.sami-auth-error {
+  max-width: none !important;
+  margin-top: 16px;
+}
+
+.sami-auth-actions {
+  margin-top: 24px;
+}
+
+.sami-login-button {
+  height: 50px;
+  border-radius: 14px;
+  border-color: #cfd8e6;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.sami-login-button:hover {
+  border-color: #1877f2;
+  box-shadow: 0 16px 36px rgba(24, 119, 242, 0.16);
+}
+
+.sami-login-button img {
+  max-width: 218px;
+  max-height: 31px;
+  object-fit: contain;
+}
+
+.sami-auth-overlay.is-working .sami-auth-actions {
+  opacity: .55;
+  pointer-events: none;
+}
+
+.app-drawer {
+  box-shadow: -24px 0 80px rgba(2, 6, 23, 0.32);
+}
+
+.settings-card {
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.settings-card:hover {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+@keyframes samiSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes samiOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes samiDialogIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

@@ -109,7 +109,7 @@ app.innerHTML = `
         <button class="topbar-icon-btn" id="reconnectButton" type="button" title="Reconectar al último puerto" hidden><i data-lucide="refresh-cw"></i></button>
         <button class="soft-button" id="connectButton" type="button" title="Conectar placa por WebSerial"><i data-lucide="plug-zap"></i><span>Conectar</span></button>
         <button class="sami-account-button" id="samiAccountButton" type="button" title="Cuenta Sami ID">
-          <img src="${SAMI_ICON_MARK}" alt="" />
+          <span class="sami-account-logo"><img src="${SAMI_ICON_MARK}" alt="" /></span>
           <span>Visitante</span>
         </button>
         <button class="topbar-icon-btn ai-toggle-btn" id="aiPanelToggle" type="button" title="Asistente IA — SteamBot"><i data-lucide="bot"></i></button>
@@ -236,6 +236,10 @@ app.innerHTML = `
 
       <div class="settings-card sami-account-card">
         <div class="card-heading"><i data-lucide="user-round"></i><h2>Cuenta Sami ID</h2></div>
+        <div class="sami-account-brand">
+          <img src="${SAMI_FULL_MARK}" alt="Sami ID" />
+          <span id="samiSettingsState">Modo visitante</span>
+        </div>
         <div class="sami-account-row">
           <img id="samiSettingsAvatar" src="${SAMI_ICON_MARK}" alt="" />
           <div>
@@ -329,13 +333,20 @@ app.innerHTML = `
 
   <div class="sami-auth-overlay" id="samiAuthOverlay" hidden>
     <section class="sami-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="samiAuthTitle">
-      <img class="sami-auth-full" src="${SAMI_FULL_MARK}" alt="Sami ID" />
+      <div class="sami-auth-brandline">
+        <span class="sami-auth-icon"><img src="${SAMI_ICON_MARK}" alt="" /></span>
+        <img class="sami-auth-full" src="${SAMI_FULL_MARK}" alt="Sami ID" />
+      </div>
       <h2 id="samiAuthTitle">Inicia sesión con Sami ID</h2>
-      <p>Entra para identificarte en NEW STEAMMAKERS o continúa como visitante.</p>
+      <p>Conecta tu identidad para entrar en NEW STEAMMAKERS. También puedes seguir explorando como visitante.</p>
+      <div class="sami-auth-status" id="samiAuthStatus" hidden>
+        <span class="sami-auth-spinner"></span>
+        <span>Conectando con Sami ID...</span>
+      </div>
       <p class="sami-auth-error" id="samiAuthError" hidden></p>
       <div class="sami-auth-actions">
-        <button class="sami-login-button" id="samiLoginButton" type="button">
-          <img src="${SAMI_FULL_MARK}" alt="Iniciar sesión con Sami ID" />
+        <button class="sami-login-button" id="samiLoginButton" type="button" aria-label="Iniciar sesión con Sami ID">
+          <img src="${SAMI_FULL_MARK}" alt="" />
         </button>
         <button class="soft-button" id="samiVisitorButton" type="button"><i data-lucide="user-round"></i><span>Entrar como visitante</span></button>
       </div>
@@ -411,11 +422,13 @@ const els = {
   aiWelcome: document.querySelector("#aiWelcome"),
   samiAccountButton: document.querySelector("#samiAccountButton"),
   samiSettingsAvatar: document.querySelector("#samiSettingsAvatar"),
+  samiSettingsState: document.querySelector("#samiSettingsState"),
   samiSettingsName: document.querySelector("#samiSettingsName"),
   samiSettingsDetail: document.querySelector("#samiSettingsDetail"),
   samiSettingsLoginButton: document.querySelector("#samiSettingsLoginButton"),
   samiSettingsLogoutButton: document.querySelector("#samiSettingsLogoutButton"),
   samiAuthOverlay: document.querySelector("#samiAuthOverlay"),
+  samiAuthStatus: document.querySelector("#samiAuthStatus"),
   samiAuthError: document.querySelector("#samiAuthError"),
   samiLoginButton: document.querySelector("#samiLoginButton"),
   samiVisitorButton: document.querySelector("#samiVisitorButton"),
@@ -500,6 +513,7 @@ function randomOAuthState() {
 }
 
 function startSamiLogin() {
+  setSamiGate(true, "Abriendo Sami ID...");
   const state = randomOAuthState();
   sessionStorage.setItem(SAMI_STATE_KEY, state);
   localStorage.removeItem(SAMI_VISITOR_KEY);
@@ -517,16 +531,23 @@ function setVisitorMode() {
   visitorMode = true;
   authGateError = "";
   localStorage.setItem(SAMI_VISITOR_KEY, "1");
-  els.samiAuthOverlay.hidden = true;
+  setSamiGate(false);
   renderSamiAccount();
 }
 
 function setSamiGate(open, error = "") {
-  authGateError = error;
+  const isWorking = /abriendo|autenticando|conectando/i.test(error);
+  authGateError = isWorking ? "" : error;
   els.samiAuthOverlay.hidden = !open;
+  els.samiAuthOverlay.classList.toggle("is-working", Boolean(open && isWorking));
+  if (els.samiAuthStatus) {
+    els.samiAuthStatus.hidden = !open || !isWorking;
+    const label = els.samiAuthStatus.querySelector("span:last-child");
+    if (label) label.textContent = error || "Conectando con Sami ID...";
+  }
   if (els.samiAuthError) {
     els.samiAuthError.textContent = error;
-    els.samiAuthError.hidden = !error;
+    els.samiAuthError.hidden = !error || isWorking;
   }
 }
 
@@ -543,9 +564,10 @@ function renderSamiAccount() {
 
   if (els.samiAccountButton) {
     els.samiAccountButton.classList.toggle("is-signed-in", signedIn);
-    els.samiAccountButton.innerHTML = `<img src="${signedIn ? SAMI_ICON_MARK : SAMI_ICON_MARK}" alt="" /><span>${escHtml(name)}</span>`;
+    els.samiAccountButton.innerHTML = `<span class="sami-account-logo"><img src="${SAMI_ICON_MARK}" alt="" /></span><span>${escHtml(name)}</span>`;
   }
   if (els.samiSettingsAvatar) els.samiSettingsAvatar.src = SAMI_ICON_MARK;
+  if (els.samiSettingsState) els.samiSettingsState.textContent = signedIn ? "Cuenta conectada" : "Modo visitante";
   if (els.samiSettingsName) els.samiSettingsName.textContent = name;
   if (els.samiSettingsDetail) els.samiSettingsDetail.textContent = detail;
   if (els.samiSettingsLoginButton) els.samiSettingsLoginButton.hidden = signedIn;
